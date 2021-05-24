@@ -79,6 +79,8 @@ We are going to manipulate these data using "verbs" from `dplyr`. I'll only teac
 
 ## Exploring and characterizing the dataset
 
+Notice I'm going to use `read_csv` instead of the usual "base R" `read.csv` - this is the `tidyverse` version and it's faster and has better defaults. (It also returns a "tibble", which is a slightly better version of a data frame. 
+
 ```{r}
 sgf <- read_csv("data/stiller_scales_data.csv")
 sgf
