@@ -102,7 +102,7 @@ View(sgf)
 
 There are lots of reasons you might want to remove *rows* from your dataset, including getting rid of outliers, selecting subpopulations, etc. `filter` is a verb (function) that takes a data frame as its first argument, and then as its second takes the **condition** you want to filter on. 
 
-So if you wanted to look only at two year olds, you could do this. (Note you can give two conditions, could also do `age > 2 & age < 3`). (equivalent: `filter(sgf, age > 2, age < 3)`)
+So if you wanted to look only at two year olds, you could do this. (Note you can give two conditions, could also do `age >= 2 & age < 3`). (equivalent: `filter(sgf, age >= 2, age < 3)`)
 
 Note that we're going to be using pipes with functions over data frames here. The way this works is that:
 
@@ -116,11 +116,13 @@ OK, so filtering:
 
 ```{r}
 sgf %>%
-  filter(age > 2, 
+  filter(age >= 2, 
          age < 3) 
 ```
 
 **Exercise.** Filter out only the "face" trial in the "Label" condition.
+
+(Hint: use the `==` operator to test for equality -- works for strings and numbers.)
 
 ```{r}
 
@@ -179,8 +181,21 @@ So we can group by age or condition or whatever else we want and then carry out 
 sgf_means <- sgf %>%
   group_by(age_group, condition) %>%
   summarise(correct = mean(correct), 
-            n_observations = length(subid))
+            n_observations = n())
 sgf_means
+```
+
+In psychology we often want to first calculate subject-level means per condition so that we can then calculate the variability (standard deviation / standard error).
+
+```{r}
+sgf_means <- sgf %>%
+  group_by(age_group, condition, subid) %>%
+  summarise(correct = mean(correct)) %>%
+  group_by(age_group, condition) %>%
+  summarise(sd = sd(correct),
+            n_subj = length(subid),
+            se = sd / sqrt(n_subj),
+            correct = mean(correct))
 ```
 
 These summary data are typically very useful for plotting.
@@ -189,6 +204,7 @@ These summary data are typically very useful for plotting.
 ggplot(sgf_means, 
        aes(x = age_group, y = correct, col = condition, group = condition)) + 
   geom_line() + 
+  geom_errorbar(aes(ymin = correct-se, ymax = correct+se), width=.1) + 
   ylim(0,1) +
   theme_classic()
 ```
