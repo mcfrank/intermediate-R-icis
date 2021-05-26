@@ -102,7 +102,7 @@ View(sgf)
 
 There are lots of reasons you might want to remove *rows* from your dataset, including getting rid of outliers, selecting subpopulations, etc. `filter` is a verb (function) that takes a data frame as its first argument, and then as its second takes the **condition** you want to filter on. 
 
-So if you wanted to look only at two year olds, you could do this. (Note you can give two conditions, could also do `age > 2 & age < 3`). (equivalent: `filter(sgf, age > 2, age < 3)`)
+So if you wanted to look only at two year olds, you could do this. (Note you can give two conditions, could also do `age >= 2 & age < 3`). (equivalent: `filter(sgf, age >= 2, age < 3)`)
 
 Note that we're going to be using pipes with functions over data frames here. The way this works is that:
 
@@ -116,11 +116,13 @@ OK, so filtering:
 
 ```{r}
 sgf %>%
-  filter(age > 2, 
+  filter(age >= 2, 
          age < 3) 
 ```
 
 **Exercise.** Filter out only the "face" trial in the "Label" condition.
+
+(Hint: use the `==` operator to test for equality -- works for strings and numbers.)
 
 ```{r}
 
