@@ -1,23 +1,35 @@
 ---
 title: "Intermediate R"
 author: "Mike Frank"
-date: "5/26/2021"
+date: "5/27/2021"
 output: 
   html_document:
     toc: true
     toc_float: true
 editor_options: 
-  chunk_output_type: console
+  chunk_output_type: inline
 ---
 
-Starting note: The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/). My contribution here is to translate this reference for psychology.
+# Housekeeping
 
 If you have tidyverse installed, you can `knit` the tutorial into an HTML document for better readability by pressing the `knit` button at the top.
 
-```{r setup, include=FALSE}
-library(tidyverse)
-knitr::opts_chunk$set(echo = TRUE, cache=TRUE)
-```
+## Poll
+
+**POLL QUESTIONS**:
+
+* Do you have R, R Studio, and Tidyverse installed?  [yes / no]
+* Did you take Krista's webinar on Tuesday?  [yes / no]
+* Have you used tidyverse before?  [yes / no]
+* Have you used ggplot before?  [yes / no]
+
+## Questions
+
+We want you to ask questions in the chat. Other students will learn from your questions because they have the same questions too probably! If you are feeling shy (or have issues with software installs or bugs that are specific to your computer or a particular line of code that isn't working) then you can private chat to Mika Braginsky, Georgia Loukatou, or George Kachergis, our TAs!
+
+## Misc
+
+The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/). My contribution here is to translate this reference for psychology.s
 
 <!-- ----------------------------------------------------------------------- -->
 # Goals and Introduction
@@ -33,21 +45,27 @@ In order to do that, we'll start by introducing the concepts of **tidy data** an
 
 ## Tidy data
 
+All of this is in the `tidyverse` package, which we'll load now. 
+
+```{r setup, include=FALSE}
+library(tidyverse)
+```
+
 > “Tidy datasets are all alike, but every messy dataset is messy in its own way.” –– Hadley Wickham
 
-Here's the basic idea: In tidy data, every row is a single **observation** (trial), and every column describes a **variable** with some **value** describing that trial. 
+Here's the basic idea: In tidy data, every row is a single **observation** (trial), and every column describes a **variable** with some **value** describing that trial.
 
 And if you know that data are formatted this way, then you can do amazing things, basically because you can take a uniform approach to the dataset. From R4DS:
 
-"There’s a general advantage to picking one consistent way of storing data. If you have a consistent data structure, it’s easier to learn the tools that work with it because they have an underlying uniformity. There’s a specific advantage to placing variables in columns because it allows R’s vectorised nature to shine."
+"There's a general advantage to picking one consistent way of storing data. If you have a consistent data structure, it's easier to learn the tools that work with it because they have an underlying uniformity. There's a specific advantage to placing variables in columns because it allows R's vectorised nature to shine."
 
-Here's an example of a tidy dataset:
+Here's an example of a tidy dataset (note: our "datasets" are stored in "dataframes," which in the tidyverse are called "tibbles" - yes, it's a little confusing):
 
 ```{r}
 starwars
 ```
 
-Each row is one observation (a star wars character) and each column is a variable (e.g. height) with a value for that observation (e.g. Luke Skywalker's height is 172).
+Each row is one observation (a Star Wars character) and each column is a variable (e.g. height) with a value for that observation (e.g. Luke Skywalker's height is 172).
 
 ## Functions and Pipes
 
@@ -56,25 +74,27 @@ Everything you typically want to do in statistical programming uses **functions*
 What's the mean height of star wars characters? We could pull out the `height` column and take the mean of those values with:
 
 ```{r}
-mean(starwars$height, na.rm = TRUE)
+
 ```
 
 Equivalently, we can use the pipe symbol `%>%` to write:
 
 ```{r}
-starwars$height %>% mean(na.rm = TRUE)
+
 ```
 
 The `%>%` means that whatever is before it is passed as the first argument to the function after it.
 
-That's not very useful yet, but when you start **nesting** functions, it gets better.  What if we want the mean height in inches, rounded to two decimal points?
+That's not very useful yet, but when you start **nesting** functions, it gets better.  What if we want the mean height in inches, rounded to two decimal points? 
+
+*[Put your piped version in CHAT if you feel like it!]*
 
 ```{r}
-cm_to_in <- function(cm) cm / 2.54 # convert centimeters to inches
+# make a function that divides by 2.54
 
-round(mean(cm_to_in(starwars$height), na.rm = TRUE), digits = 2)
+# first compute mean height in inches the normal, nested way  
 
-# how do we do this with pipes? 
+# now how do we do this with pipes? 
 ```
 
 This can be super helpful for writing strings of functions so that they are readable and distinct. We'll be doing a lot of piping of functions with multiple arguments later, and it will really help keep our syntax simple. 
@@ -86,7 +106,7 @@ Reference: [R4DS Chapter 5](http://r4ds.had.co.nz/transform.html)
 
 Let's take a psychological dataset. Here are the raw data from [Stiller, Goodman, & Frank (2015)](http://langcog.stanford.edu/papers_new/SGF-LLD-2015.pdf). Children met a puppet named "Furble." Furble would show them three pictures, e.g. face, face with glasses, face with hat and glasses and would say "my friend has glasses." They then had to choose which face was Furble's friend. (The prediction was that they'd choose *glasses and not a hat*, indicating that they'd made a correct pragmatic inference). In the control condition, Furble just mumbled. 
 
-These data are tidy: each row describes a single trial, each column describes some aspect of tha trial, including their id (`subid`), age (`age`), condition (`condition` - "label" is the experimental condition, "No Label" is the control), item (`item` - which thing Furble was trying to find). 
+These data are tidy: each row describes a single trial, each column describes some aspect of that trial, including their id (`subid`), age (`age`), condition (`condition` - "label" is the experimental condition, "No Label" is the control), item (`item` - which thing Furble was trying to find). 
 
 We are going to manipulate these data using "verbs" from `dplyr`. I'll only teach four verbs, the most common in my workflow (but there are many other useful ones):
 
@@ -100,27 +120,26 @@ We are going to manipulate these data using "verbs" from `dplyr`. I'll only teac
 Notice I'm going to use `read_csv` instead of the usual "base R" `read.csv` - this is the `tidyverse` version and it's faster and has better defaults. (It also returns a "tibble", which is a slightly better version of a data frame. 
 
 ```{r}
-sgf <- read_csv("data/stiller_scales_data.csv")
-sgf
+# read in the data
 ```
 
 Inspect the various variables before you start any analysis. Lots of people recommend `summary` but TBH I don't find it useful. 
 
+*[CHAT question: What's your favorite way to inspect data?]*
+
 ```{r}
-summary(sgf)
+
 ```
 
 I prefer interactive tools like `View` or `DT::datatable` (which I really like, especially in knitted reports).
 
 ```{r, eval=FALSE}
-View(sgf)
+
 ```
 
 ## Filtering & Mutating
 
 There are lots of reasons you might want to remove *rows* from your dataset, including getting rid of outliers, selecting subpopulations, etc. `filter` is a verb (function) that takes a data frame as its first argument, and then as its second takes the **condition** you want to filter on. 
-
-So if you wanted to look only at two year olds, you could do this. (Note you can give two conditions, could also do `age >= 2 & age < 3`). (equivalent: `filter(sgf, age >= 2, age < 3)`)
 
 Note that we're going to be using pipes with functions over data frames here. The way this works is that:
 
@@ -133,26 +152,26 @@ This is essentially the huge insight of `dplyr`: you can chain verbs into readab
 OK, so filtering:
 
 ```{r}
-sgf %>%
-  filter(age >= 2, 
-         age < 3) 
+# try to filter SGF so we just get the two year olds
+
 ```
 
-**Exercise.** Filter out only the "face" trial in the "Label" condition.
+** EXERCISE**. Filter out only the "face" trial in the "Label" condition.
 
 (Hint: use the `==` operator to test for equality -- works for strings and numbers.)
 
+*[Put your solution in CHAT!]*
+
 ```{r}
+# face trial, label condition
 
 ```
 
-Next up, *adding columns*. You might do this perhaps to compute some kind of derived variable. `mutate` is the verb for these situations - it allows you to add a column. Let's add a discrete age group factor to our dataset.
+Next up, *adding columns*. You might do this perhaps to compute some kind of derived variable. `mutate` is the verb for these situations - it allows you to add a column. Let's add a discrete age group factor to our dataset. Protip: `cut` is a good function for developmentalists to know because it lets you cut a continuous variable into a set of discrete bins (like we do all the time, for better or for worse). 
 
 ```{r}
-sgf <- sgf %>%
-  mutate(age_group = cut(age, 2:5, include.lowest = TRUE))
+# add an age group column using the `cut` function
 
-head(sgf$age_group)
 ```
 
 ## Standard descriptives using `summarise` and `group_by`
@@ -160,13 +179,31 @@ head(sgf$age_group)
 We typically describe datasets at the level of subjects, not trials. We need two verbs to get a summary at the level of subjects: `group_by` and `summarise` (kiwi spelling). Grouping alone doesn't do much.
 
 ```{r}
-sgf %>%
-  group_by(age_group) 
+# group by doesn't do much
+
 ```
 
 All it does is add a grouping marker. 
 
 What `summarise` does is to *apply a function* to a part of the dataset to create a new summary dataset. So we can apply the function `mean` to the dataset and get the grand mean. 
+
+```{r}
+# get the grand mean
+
+```
+
+Note the syntax here: `summarise` takes multiple  `new_column_name = function_to_be_applied_to_data(data_column)` entries in a list. Using this syntax, we can create more elaborate summary datasets also:
+
+```{r}
+# more summary 
+
+```
+
+Where these two verbs shine is in combination, though. Because `summarise` applies functions to columns in your *grouped data*, not just to the whole dataset!
+
+So we can group by age or condition or whatever else we want and then carry out the same procedure, and all of a sudden we are doing something extremely useful!
+
+I used to do this:
 
 ```{r}
 ## DO NOT DO THIS!!!
@@ -180,54 +217,96 @@ What `summarise` does is to *apply a function* to a part of the dataset to creat
 #   }
 # }
 
-sgf %>%
-  summarise(correct = mean(correct))
-```
-Note the syntax here: `summarise` takes multiple  `new_column_name = function_to_be_applied_to_data(data_column)` entries in a list. Using this syntax, we can create more elaborate summary datasets also:
-
-```{r}
-sgf %>%
-  summarise(correct = mean(correct), 
-            n_observations = length(subid))
 ```
 
-Where these two verbs shine is in combination, though. Because `summarise` applies functions to columns in your *grouped data*, not just to the whole dataset!
+*[Put in the CHAT if you have ever done something like that in any programming language!]*
 
-So we can group by age or condition or whatever else we want and then carry out the same procedure, and all of a sudden we are doing something extremely useful!
+But now I can do this (!):
 
 ```{r}
-sgf_means <- sgf %>%
-  group_by(age_group, condition) %>%
-  summarise(correct = mean(correct), 
-            n_observations = n())
-sgf_means
+# get means and ns by age group and condition
+
 ```
 
 In psychology we often want to first calculate subject-level means per condition so that we can then calculate the variability (standard deviation / standard error).
 
+This is a big gotcha that I see in a lot of work, where someone reports `t(2317) = 400, p < .0000001` but they only had 40 subjects. They forgot to take the subject means and so they did their t-test over every single trial (which makes the p-values very extreme and not right). 
+
+So the thing you really want to do is:
+
 ```{r}
-sgf_means <- sgf %>%
-  group_by(age_group, condition, subid) %>%
-  summarise(correct = mean(correct)) %>%
-  group_by(age_group, condition) %>%
-  summarise(sd = sd(correct),
-            n_subj = length(subid),
-            se = sd / sqrt(n_subj),
-            correct = mean(correct))
+# first get subject means
+
+# then get group means
+
 ```
 
 These summary data are typically very useful for plotting.
 
+<!-- ----------------------------------------------------------------------- -->
+# The briefest of intros to `ggplot`
+
+`ggplot` is the plotting package that's included in `tidyverse`, but it's really a topic in its own right. The easy way to plot something in `ggplot` is to type the kind of plot you want into google and then copy and paste from stack overflow. But if you have to do it by hand, a ggplot has two critical elements:
+
+1. The initial statement, which maps variables in a dataframe to a set of plot aesthetics: this looks like `ggplot(data, aes(x = ..., y = ...))` where `data` is your dataframe and `x` and `y` are followed by the variables you want to map to x and y positions. 
+
+2. One or more "geoms" or geometric mapping elements, like points (`geom_point` with x and y positions) or bars or lines. 
+
+This sounds tricky and it takes a little getting used to, but it's not too bad. 
+
+Let's make a really simple ggplot:
+
 ```{r}
-ggplot(sgf_means, 
-       aes(x = age_group, y = correct, col = condition, group = condition)) + 
-  geom_line() + 
-  geom_errorbar(aes(ymin = correct-se, ymax = correct+se), width=.1) + 
-  ylim(0,1) +
-  theme_classic()
+# plot starwars mass by height
+
 ```
 
-**Exercise**. Adapt the code above to split the data by item, rather than age group. **BONUS**: plot the data this way as well.  
+Maybe the key awesome thing that works really well in ggplot is something called "faceting" - where you make lots of little plots that are all the same. You do this with `facet_wrap` or `facet_grid`.
+
+```{r}
+# try faceting the above plot by gender
+
+```
+
+OK, so now let's go back to the `sgf` data that we had above and make a pretty ggplot of it. 
+
+
+```{r}
+# now make pretty ggplot of sgf by age and condition
+
+```
+
+And we can use `geom_errorbar` to add error bars~
+
+
+```{r}
+# now make pretty ggplot of sgf by age and condition
+
+```
+
+
+**BREAKOUT ROOM EXERCISE**. 
+Try to work your way through these three exercises, asking questions of your TA. We don't expect everyone to make it through all three in the time we have, don't worry. You're an R ninja if you can do all three 
+
+1. Adapt the code above to find the proportion of correct responses for each item in each condition (rather than for each age group in each condition).
+
+(Hint: change what you `group_by`.)
+(Hint 2: "proportion of correct responses" can be computed with `mean`.)
+
+```{r}
+
+```
+
+2. Plot the proportion of correct responses for each item in each condition  `ggplot`. 
+
+```{r}
+
+```
+
+
+3. Use faceting to make a plot of proportion of correct responses for each item, condition, AND age group. 
+
+(Hint: you will need to go back and `group_by` all of the factors you want in the final plot). 
 
 ```{r}
 
@@ -245,7 +324,8 @@ For example, let's take a look at a wide version of the `sgf` dataset above.
 
 ```{r}
 sgf_wide <- read_csv("data/sgf_wide.csv")
-head(sgf_wide)
+
+# examine these data
 ```
 
 The two main verbs for tidying are `pivot_longer` and `pivot_wider`. (There are lots of others in the `tidyr` package if you want to split or merge columns etc.). 
@@ -261,15 +341,21 @@ Here, we'll just show how to use `pivot_longer` to make the data tidy; we'll try
 Let's try it:
 
 ```{r}
-sgf_tidy <- sgf_wide %>% 
-  pivot_longer(beds:pasta, 
-               names_to = "item", 
-               values_to = "correct")
-sgf_tidy
+# use pivot longer to tidy up the data, naming the columns "items" and "correct"
+
+# sgf_tidy <- ...
 ```
+
 We can compare this to `sgf` and see that we've recovered the original long form. (This is good, because I used `pivot_wider` to *make* the `sgf_wide` dataframe). 
 
-**Exercise.** Use `pivot_wider` to try and make `sgf_wide` from `sgf`. The two arguments you need are `names_from` and `values_from`, which specify the names and values (just like in `pivot_longer`).   
+**QUESTION** Put in the chat: How would you use `pivot_wider` to try and make `sgf_wide` from `sgf`. The two arguments you need are `names_from` and `values_from`, which specify the names and values (just like in `pivot_longer`).   
+
+```{r}
+# fill in the blank
+# sgf_wide <- sgf %>%
+#  ...
+
+```
 
 <!-- ----------------------------------------------------------------------- -->
 # Extras
@@ -280,7 +366,7 @@ These extras are fun things to go through at the end of the tutorial, time permi
 
 We're going to be using some data on vocabulary growth that we load from the Wordbank database. [Wordbank](http://wordbank.stanford.edu) is a database of children's language learning. 
 
-We're going to look at data from the English Words and Sentences form. These data describe the repsonses of parents to questions about whether their child says 680 different words. 
+We're going to look at data from the English Words and Sentences form. These data describe the responses of parents to questions about whether their child says 680 different words. 
 
 `tidyverse` really shines in this context. 
 
@@ -311,7 +397,7 @@ ggplot(ws, aes(x = age, y = production)) +
   geom_jitter(size = .5, width = .25, height = 0, alpha = .3)
 ```
 
-Ok, let's plot the relationship between sex and productive vocabulary, using `dplyr`.
+OK, let's plot the relationship between sex and productive vocabulary, using `dplyr`.
 
 ```{r, eval=FALSE}
 ggplot(ws, aes(x = age, y = production, col=sex)) + 
@@ -322,25 +408,29 @@ ggplot(ws, aes(x = age, y = production, col=sex)) +
 <!-- ----------------------------------------------------------------------- -->
 ## More exciting stuff you can do with this workflow
 
-Here are three little demos of exciting stuff that you can do (and that are facilitated by this workflow).
+Here are two little demos of exciting stuff that you can do (and that are facilitated by this workflow).
 
-### Reading bigger files, faster
+### Function application 
 
-A few other things will help you with "medium size data":
+As I've tried to highlight, `tidyverse` is actually all about applying functions. `summarise` is a verb that helps you apply functions to chunks of data and then bind them together. But that creates a requirement that all the functions return a single value (e.g., `mean`). There are lots of things you can do that summarise data but *don't* return a single value. For example, maybe you want to run a linear regression and return the slope *and* the intercept. 
 
-+ `read_csv` - Much faster than `read.csv` and has better defaults. 
-+ `dbplyr` - For connecting directly to databases. This package got forked off of `dplyr` recently but is very useful.
-+ `feather` - The `feather` package is a fast-loading binary format that is interoperable with python. All you need to know is `write_feather(d, "filename")` and `read_feather("filename")`. 
+For that, I want to highlight two things. 
 
-Here's a timing demo for `read.csv`, `read_csv`, and `read_feather`. 
+One is `map`, which allows function application to grouped data using the `purrr` package.
+
+The second is the amazing `broom` package, which provides methods to `tidy` the output of lots of different statistical models. So for example, you can run a linear regression on chunks of a dataset and get back out the coefficients in a data frame. 
+Here's a toy example, again with Wordbank data. 
 
 ```{r, eval=FALSE}
-system.time(read.csv("data/ws.csv"))
-system.time(read_csv("data/ws.csv"))
-system.time(feather::read_feather("data/ws.feather"))
+ws %>%
+  filter(!is.na(sex)) %>%
+  group_by(sex) %>%
+  nest() %>%
+  mutate(model = map(data, function(d) lm(production ~ age, data = d)), 
+         coefs = map(model, broom::tidy)) %>%
+  select(sex, coefs) %>%
+  unnest()
 ```
-I see about a 2x speedup for `read_csv` (bigger for bigger files) and a 20x speedup for `read_feather`.
-
 ### Interactive visualization
 
 The `shiny` package is a great way to do interactives in R. We'll walk through constructing a simple shiny app for the wordbank data here. 
@@ -382,27 +472,6 @@ shinyApp(
   options = list(height = 500)
 )
 ```
-
-### Function application 
-
-As I've tried to highlight, `tidyverse` is actually all about applying functions. `summarise` is a verb that helps you apply functions to chunks of data and then bind them together. But that creates a requirement that all the functions return a single value (e.g., `mean`). There are lots of things you can do that summarise data but *don't* return a single value. For example, maybe you want to run a linear regression and return the slope *and* the intercept. 
-
-For that, I want to highlight two things. 
-
-One is `do`, which allows function application to grouped data. The only tricky thing about using `do` is that you have to refer to the dataframe that you're working on as `.`. 
-
-The second is the amazing `broom` package, which provides methods to `tidy` the output of lots of different statistical models. So for example, you can run a linear regression on chunks of a dataset and get back out the coefficients in a data frame. 
-
-Here's a toy example, again with Wordbank data. 
-
-```{r, eval=FALSE}
-ws %>%
-  filter(!is.na(sex)) %>%
-  group_by(sex) %>%
-  do(broom::tidy(lm(production ~ age, data = .)))
-```
-
-In recent years, this workflow in R ihas gotten really good. `purrr` is an amazing package that introduces consistent ways to `map` functions. It's beyond the scope of the course. 
 
 # Conclusions
 
