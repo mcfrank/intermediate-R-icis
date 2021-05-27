@@ -6,6 +6,8 @@ output:
   html_document:
     toc: true
     toc_float: true
+editor_options: 
+  chunk_output_type: console
 ---
 
 Starting note: The best reference for this material is Hadley Wickham's [R for data scientists](http://r4ds.had.co.nz/). My contribution here is to translate this reference for psychology.
@@ -25,7 +27,7 @@ By the end of this tutorial, you will know:
 + What "tidy data" is and why it's an awesome format
 + How to do some stuff with tidy data
 + How to get your data to be tidy
-+ Some new directions for your R analysis moving forawrd
++ Some new directions for your R analysis moving forward
 
 In order to do that, we'll start by introducing the concepts of **tidy data** and **functions and pipes**.
 
@@ -39,22 +41,38 @@ And if you know that data are formatted this way, then you can do amazing things
 
 "There’s a general advantage to picking one consistent way of storing data. If you have a consistent data structure, it’s easier to learn the tools that work with it because they have an underlying uniformity. There’s a specific advantage to placing variables in columns because it allows R’s vectorised nature to shine."
 
+Here's an example of a tidy dataset:
+
+```{r}
+starwars
+```
+
+Each row is one observation (a star wars character) and each column is a variable (e.g. height) with a value for that observation (e.g. Luke Skywalker's height is 172).
+
 ## Functions and Pipes
 
 Everything you typically want to do in statistical programming uses **functions**. `mean` is a good example. `mean` takes one **argument**, a numeric vector. Pipes are a way to write strings of functions more easily. They bring the first argument of the function to the beginning. 
 
-We'll use the `mtcars` dataset that's built in with the `tidyverse` and look at the `mpg` variable (miles per gallon). Instead of writing `mean(mtcars$mpg)`, with a pipe you can write:
+What's the mean height of star wars characters? We could pull out the `height` column and take the mean of those values with:
 
 ```{r}
-mtcars$mpg %>% mean
+mean(starwars$height, na.rm = TRUE)
 ```
 
-That's not very useful yet, but when you start **nesting** functions, it gets better. 
+Equivalently, we can use the pipe symbol `%>%` to write:
 
 ```{r}
-gpm <- function (mpg) {1/mpg} # gallons per mile, maybe better than miles per gallon. 
+starwars$height %>% mean(na.rm = TRUE)
+```
 
-round(mean(gpm(mtcars$mpg)), digits = 2)
+The `%>%` means that whatever is before it is passed as the first argument to the function after it.
+
+That's not very useful yet, but when you start **nesting** functions, it gets better.  What if we want the mean height in inches, rounded to two decimal points?
+
+```{r}
+cm_to_in <- function(cm) cm / 2.54 # convert centimeters to inches
+
+round(mean(cm_to_in(starwars$height), na.rm = TRUE), digits = 2)
 
 # how do we do this with pipes? 
 ```
